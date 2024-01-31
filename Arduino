@@ -1,0 +1,135 @@
+#include <Wire.h>
+#include <AS726X.h>
+#include <TCA9548A.h>
+#include "Adafruit_SSD1306.h"
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define WIRE Wire
+Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &WIRE);
+
+TCA9548A multiplexer;
+AS726X sensorNIR;  // Sensor AS7263 en el canal 1
+AS726X sensorVIS;  // Sensor AS7262 en el canal 2
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+
+  // Inicializar el multiplexor
+  Wire.begin();
+  multiplexer.begin();
+
+  // Inicializar el sensor AS7263 (NIR) en el canal 5
+  selectI2CChannel(1);
+  sensorNIR.begin();
+
+  // Inicializar el sensor AS7262 (VIS) en el canal 1
+  selectI2CChannel(2);
+  sensorVIS.begin();
+
+  // Inicializar la pantalla OLED
+  selectI2CChannel(7);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("No se pudo inicializar la pantalla OLED"));
+    while (1);
+  }
+
+  // Limpiar la pantalla
+  display.clearDisplay();
+  display.display();
+  
+  //Serial.println(F("Configuración completa"));
+}
+
+void loop() {
+  // Obtener y procesar datos para AS7263 (NIR) en el canal 5
+  selectI2CChannel(1);
+  delay(10);  // Ajusta según sea necesario
+  sensorNIR.takeMeasurementsWithBulb();
+  
+  if (sensorNIR.getVersion() == SENSORTYPE_AS7263) {
+    Serial.println();
+    //Serial.println(" El sensor que está utilizando es el NIR");
+    // Near IR readings
+    //Serial.print(" Reading: R[");
+    Serial.print(sensorNIR.getCalibratedR(), 2);
+    Serial.print(" ");
+    //Serial.print("] S[");
+    Serial.print(sensorNIR.getCalibratedS(), 2);
+    Serial.print(" ");
+    //Serial.print("] T[");
+    Serial.print(sensorNIR.getCalibratedT(), 2);
+    Serial.print(" ");
+    //Serial.print("] U[");
+    Serial.print(sensorNIR.getCalibratedU(), 2);
+    Serial.print(" ");
+    //Serial.print("] V[");
+    Serial.print(sensorNIR.getCalibratedV(), 2);
+    Serial.print(" ");
+    //Serial.print("] W[");
+    Serial.print(sensorNIR.getCalibratedW(), 2);
+    Serial.print(" ");
+    //Serial.print("] ");
+  } else {
+    //Serial.print(" No se reconoce ");
+  }
+  
+  // Obtener y procesar datos para AS7262 (VIS) en el canal 1
+  selectI2CChannel(2);
+  delay(10);  // Ajusta según sea necesario
+  sensorVIS.takeMeasurementsWithBulb();
+  
+  if (sensorVIS.getVersion() == SENSORTYPE_AS7262) {
+    //Serial.println();
+    //Serial.println(" El sensor que está utilizando es el VIS");
+    // Visible readings
+    //Serial.print(" Reading: V[");
+    Serial.print(sensorVIS.getCalibratedViolet(), 2);
+    Serial.print(" ");
+    //Serial.print("] B[");
+    Serial.print(sensorVIS.getCalibratedBlue(), 2);
+    Serial.print(" ");
+    //Serial.print("] G[");
+    Serial.print(sensorVIS.getCalibratedGreen(), 2);
+    Serial.print(" ");
+    //Serial.print("] Y[");
+    Serial.print(sensorVIS.getCalibratedYellow(), 2);
+    Serial.print(" ");
+    //Serial.print("] O[");
+    Serial.print(sensorVIS.getCalibratedOrange(), 2);
+    Serial.print(" ");
+    //Serial.print("] R[");
+    Serial.print(sensorVIS.getCalibratedRed(), 2);
+    Serial.print(" ");
+    //Serial.print("] ");
+
+  } else {
+    //Serial.print(" No se reconoce ");
+  }
+  //Serial.println(" ");
+  
+  //Activando la pantlla OLED para mostrar la informacion pertinente
+  selectI2CChannel(7);
+  delay(10);  // Ajusta según sea necesario
+  
+   // Mostrar un árbol en la pantalla OLED
+  display.clearDisplay();
+
+  // Tronco del árbol
+  display.fillRect(56, 32, 16, 32, WHITE);
+
+  // Hojas del árbol
+  display.fillTriangle(64, 0, 48, 32, 80, 32, WHITE);
+
+  // Mostrar en la pantalla
+  display.display();
+
+}
+
+void selectI2CChannel(uint8_t channel) {
+  // Seleccionar el canal en el que se conectará el bus I2C
+  Wire.beginTransmission(0x70);
+  Wire.write(1 << channel);
+  Wire.endTransmission();
+}
