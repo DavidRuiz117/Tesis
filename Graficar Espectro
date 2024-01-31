@@ -1,0 +1,96 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from scipy.signal import savgol_filter
+
+# Lee el archivo CSV
+data = pd.read_csv('datos_espectrales.csv')
+
+# Crear canales de 450 a 860 de 10 en 10
+channels_initial = [str(wavelength) for wavelength in range(440, 870, 10)]
+
+# Inicializar listas para valores mínimo y máximo de cada canal
+min_values_original = []
+max_values_original = []
+min_values_smoothed = []
+max_values_smoothed = []
+
+# Calcula la media de cada canal (sin suavizado)
+mean_R_original = data['NIR_R'].mean()
+mean_S_original = data['NIR_S'].mean()
+mean_T_original = data['NIR_T'].mean()
+mean_U_original = data['NIR_U'].mean()
+mean_V_original = data['NIR_V'].mean()
+mean_W_original = data['NIR_W'].mean()
+
+mean_VV_original = data['Vis_Violet'].mean()
+mean_B_original = data['Vis_Blue'].mean()
+mean_G_original = data['Vis_Green'].mean()
+mean_Y_original = data['Vis_Yellow'].mean()
+mean_O_original = data['Vis_Orange'].mean()
+mean_RV_original = data['Vis_Red'].mean()
+
+# Crea listas con los valores medios (sin suavizado)
+mean_values_original = [mean_VV_original,mean_B_original,mean_G_original,mean_Y_original,mean_O_original,mean_R_original,mean_RV_original, mean_S_original, mean_T_original, mean_U_original, mean_V_original, mean_W_original]
+channels = ['450', '500', '550', '570', '600', '610','650', '680', '730', '760', '810', '860']
+
+# # Crea listas con los valores medios (sin suavizado)
+# mean_values_original = [mean_R_original, mean_S_original, mean_T_original, mean_U_original, mean_V_original, mean_W_original]
+# channels = ['610', '680', '730', '760', '810', '860']
+
+# Obtener los valores mínimo y máximo de cada canal (sin suavizado)
+min_values_original = min(mean_values_original)
+max_values_original = max(mean_values_original)
+
+# Aplica el suavizado Savitzky-Golay a los datos originales
+window_length = 11
+columns_of_interest = ['Vis_Violet', 'Vis_Blue', 'Vis_Green', 'Vis_Yellow', 'Vis_Orange', 'Vis_Red', 'NIR_R', 'NIR_S', 'NIR_T', 'NIR_U', 'NIR_V', 'NIR_W']
+for column in columns_of_interest:
+    data[column] = savgol_filter(data[column], window_length=window_length, polyorder=3)
+
+# Calcula la media de cada canal (con suavizado)
+mean_R_smoothed = data['NIR_R'].mean()
+mean_S_smoothed = data['NIR_S'].mean()
+mean_T_smoothed = data['NIR_T'].mean()
+mean_U_smoothed = data['NIR_U'].mean()
+mean_V_smoothed = data['NIR_V'].mean()
+mean_W_smoothed = data['NIR_W'].mean()
+
+mean_VV_smoothed = data['Vis_Violet'].mean()
+mean_B_smoothed = data['Vis_Blue'].mean()
+mean_G_smoothed = data['Vis_Green'].mean()
+mean_Y_smoothed = data['Vis_Yellow'].mean()
+mean_O_smoothed = data['Vis_Orange'].mean()
+mean_RV_smoothed = data['Vis_Red'].mean()
+
+# Crea listas con los valores medios (con suavizado)
+mean_values_smoothed = [mean_VV_smoothed, mean_B_smoothed, mean_G_smoothed, mean_Y_smoothed, mean_O_smoothed, mean_R_smoothed, mean_RV_smoothed, mean_S_smoothed, mean_T_smoothed, mean_U_smoothed, mean_V_smoothed, mean_W_smoothed]
+
+# Obtener los valores mínimo y máximo de cada canal (con suavizado)
+min_values_smoothed = min(mean_values_smoothed)
+max_values_smoothed = max(mean_values_smoothed)
+
+# Crear una figura con subgráficos
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, gridspec_kw={'height_ratios': [0, 10]})
+
+# Graficar el rango para cada canal en la subgráfica superior (sin suavizado)
+ax1.fill_between(channels_initial, min_values_original, max_values_original, color='lightgrey', alpha=0.7, label='Original')
+
+# Graficar el rango para cada canal en la subgráfica superior (con suavizado)
+ax1.fill_between(channels_initial, min_values_smoothed, max_values_smoothed, color='white', alpha=1, label='Suavizado')
+
+# Graficar los datos medios con líneas en la subgráfica inferior
+ax2.plot(channels, mean_values_original, marker='o', linestyle='-', color='b', label='Original')
+ax2.plot(channels, mean_values_smoothed, marker='o', linestyle='-', color='r', label='Suavizado')
+
+# Añadir etiquetas y título
+ax2.set_xlabel('Canales NIR (nm)')
+ax2.set_ylabel('Media de Intensidad')
+ax2.set_title('Espectro Medio NIR (nm)')
+ax2.legend()
+
+# Ajustar el diseño para evitar solapamientos
+plt.tight_layout()
+
+# Mostrar la figura
+plt.show()
