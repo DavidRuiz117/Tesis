@@ -4,7 +4,7 @@ import re
 import pandas as pd
 
 
-puerto_serial = 'COM3'  # Cambia esto al puerto que estés utilizando
+puerto_serial = 'COM5'  # Cambia esto al puerto que estés utilizando
 velocidad_serial = 115200
 
 
