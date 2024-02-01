@@ -65,105 +65,62 @@ void setup() {
 }
 
 void loop() {
-
   // obtiene tecla presionada y asigna a variable
   char key = keypad.getKey();
   // comprueba que se haya presionado una tecla
   if (key == '1') {
     // Comienza la secuencia de mediciones
     displayMessage("Inicio de Lectura");
-    delay(1000);
+    contadorMediciones += 1;
     for (int i = 0; i < 5; ++i) {
+      Serial.print(contadorMediciones);
+      Serial.print(" ");
       // Obtener y procesar datos para AS7263 (NIR) en el canal 5
       selectI2CChannel(1);
       delay(10);  // Ajusta según sea necesario
       sensorNIR.takeMeasurementsWithBulb();
-      
       if (sensorNIR.getVersion() == SENSORTYPE_AS7263) {
-        Serial.println();
-        //Serial.println(" El sensor que está utilizando es el NIR");
-        // Near IR readings
-        //Serial.print(" Reading: R[");
         Serial.print(sensorNIR.getCalibratedR(), 2);
         Serial.print(" ");
-        //Serial.print("] S[");
         Serial.print(sensorNIR.getCalibratedS(), 2);
         Serial.print(" ");
-        //Serial.print("] T[");
         Serial.print(sensorNIR.getCalibratedT(), 2);
         Serial.print(" ");
-        //Serial.print("] U[");
         Serial.print(sensorNIR.getCalibratedU(), 2);
         Serial.print(" ");
-        //Serial.print("] V[");
         Serial.print(sensorNIR.getCalibratedV(), 2);
         Serial.print(" ");
-        //Serial.print("] W[");
         Serial.print(sensorNIR.getCalibratedW(), 2);
         Serial.print(" ");
-        //Serial.print("] ");
-      } else {
-        //Serial.print(" No se reconoce ");
-      }
-      
+      } 
       // Obtener y procesar datos para AS7262 (VIS) en el canal 1
       selectI2CChannel(2);
       delay(10);  // Ajusta según sea necesario
       sensorVIS.takeMeasurementsWithBulb();
-      
       if (sensorVIS.getVersion() == SENSORTYPE_AS7262) {
-        //Serial.println();
-        //Serial.println(" El sensor que está utilizando es el VIS");
-        // Visible readings
-        //Serial.print(" Reading: V[");
+        
         Serial.print(sensorVIS.getCalibratedViolet(), 2);
         Serial.print(" ");
-        //Serial.print("] B[");
         Serial.print(sensorVIS.getCalibratedBlue(), 2);
         Serial.print(" ");
-        //Serial.print("] G[");
         Serial.print(sensorVIS.getCalibratedGreen(), 2);
         Serial.print(" ");
-        //Serial.print("] Y[");
         Serial.print(sensorVIS.getCalibratedYellow(), 2);
         Serial.print(" ");
-        //Serial.print("] O[");
         Serial.print(sensorVIS.getCalibratedOrange(), 2);
         Serial.print(" ");
-        //Serial.print("] R[");
         Serial.print(sensorVIS.getCalibratedRed(), 2);
         Serial.print(" ");
-        //Serial.print("] ");
-    
-      } else {
-        //Serial.print(" No se reconoce ");
-      }
+        Serial.println();
+      } 
     }
+    
     // Fin de la secuencia de mediciones
     displayMessage("Lectura Terminada");
-    delay(2000);
-    contadorMediciones += 5;
+    displayCounter(contadorMediciones);
+    
   }
-  delay(10);
-  display.clearDisplay();
   display.display();
-  
-//  //Activando la pantlla OLED para mostrar la informacion pertinente
-//  selectI2CChannel(7);
-//  
-//  delay(10);  // Ajusta según sea necesario
-//  
-//   // Mostrar un árbol en la pantalla OLED
-//  display.clearDisplay();
-//
-//  // Tronco del árbol
-//  display.fillRect(56, 32, 16, 32, WHITE);
-//
-//  // Hojas del árbol
-//  display.fillTriangle(64, 0, 48, 32, 80, 32, WHITE);
-//
-//  // Mostrar en la pantalla
-//  display.display();
 }
 
 void selectI2CChannel(uint8_t channel) {
@@ -179,6 +136,18 @@ void displayMessage(const char *message) {
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
+  display.print("Medicion Chontaduro ");
+  display.setCursor(0, 9);
   display.print(message);
+  display.display();
+}
+
+void displayCounter(int counter) {
+  selectI2CChannel(7);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 16);
+  display.print("Muestras: ");
+  display.print(counter);
   display.display();
 }
