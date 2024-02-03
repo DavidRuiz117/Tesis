@@ -5,6 +5,10 @@
 
 // importa libreria Keypad
 #include <Keypad.h>
+#include <ESP32Servo.h>
+//Instanciamos nuestro servo
+Servo servo;
+int pinServo=2;
 // define numero de filas
 const uint8_t ROWS = 4;
 // define numero de columnas
@@ -60,10 +64,11 @@ void setup() {
   // Limpiar la pantalla
   display.clearDisplay();
   display.display();
-  
+  servo.attach(pinServo, 500, 2500);
   //Serial.println(F("Configuración completa"));
 }
 
+int pos = 0;
 void loop() {
   // obtiene tecla presionada y asigna a variable
   char key = keypad.getKey();
@@ -72,8 +77,94 @@ void loop() {
     // Comienza la secuencia de mediciones
     displayMessage("Inicio de Lectura");
     contadorMediciones += 1;
-    for (int i = 0; i < 5; ++i) {
-      Serial.print(contadorMediciones);
+    
+    for (pos = 0; pos <= 60; pos += 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+    
+    for (pos = 60; pos <= 120; pos += 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+
+    for (pos = 120; pos <= 180; pos += 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+
+    for (pos = 180; pos >= 120; pos -= 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+    
+    for (pos = 120; pos >= 60; pos -= 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+    
+    for (pos = 60; pos >= 0; pos -= 1) {
+    //Movemos el servo a los grados que le entreguemos
+    servo.write(pos);
+    //Esperamos 15 milisegundos
+    delay(10);
+    }
+    TomarDatos();
+    
+    // Fin de la secuencia de mediciones
+    displayMessage("Lectura Terminada");
+    displayCounter(contadorMediciones);
+    
+  }
+  display.display();
+}
+
+void selectI2CChannel(uint8_t channel) {
+  // Seleccionar el canal en el que se conectará el bus I2C
+  Wire.beginTransmission(0x70);
+  Wire.write(1 << channel);
+  Wire.endTransmission();
+}
+
+void displayMessage(const char *message) {
+  selectI2CChannel(7);
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print("Medicion Chontaduro ");
+  display.setCursor(0, 9);
+  display.print(message);
+  display.display();
+}
+
+void displayCounter(int counter) {
+  selectI2CChannel(7);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 16);
+  display.print("Muestras: ");
+  display.print(counter);
+  display.display();
+}
+
+void TomarDatos(){
+  Serial.print(contadorMediciones);
       Serial.print(" ");
       // Obtener y procesar datos para AS7263 (NIR) en el canal 5
       selectI2CChannel(1);
@@ -113,41 +204,4 @@ void loop() {
         Serial.print(" ");
         Serial.println();
       } 
-    }
-    
-    // Fin de la secuencia de mediciones
-    displayMessage("Lectura Terminada");
-    displayCounter(contadorMediciones);
-    
-  }
-  display.display();
-}
-
-void selectI2CChannel(uint8_t channel) {
-  // Seleccionar el canal en el que se conectará el bus I2C
-  Wire.beginTransmission(0x70);
-  Wire.write(1 << channel);
-  Wire.endTransmission();
-}
-
-void displayMessage(const char *message) {
-  selectI2CChannel(7);
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  display.print("Medicion Chontaduro ");
-  display.setCursor(0, 9);
-  display.print(message);
-  display.display();
-}
-
-void displayCounter(int counter) {
-  selectI2CChannel(7);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 16);
-  display.print("Muestras: ");
-  display.print(counter);
-  display.display();
 }
