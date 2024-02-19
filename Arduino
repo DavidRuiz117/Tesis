@@ -2,19 +2,20 @@
 #include <AS726X.h>
 #include <TCA9548A.h>
 #include "Adafruit_SSD1306.h"
+#include <ESP32Servo.h>
 
 // importa libreria Keypad
 #include <Keypad.h>
 // define numero de filas
 const uint8_t ROWS = 1;
 // define numero de columnas
-const uint8_t COLS = 1;
+const uint8_t COLS = 2;
 // define la distribucion de teclas
 char keys[ROWS][COLS] = {
-  { '*' }
+  { '*', '0' }
 };
 // pines correspondientes a las filas
-uint8_t colPins[COLS] = { 16 };
+uint8_t colPins[COLS] = { 16, 5 };
 // pines correspondientes a las columnas
 uint8_t rowPins[ROWS] = { 17 };
 // crea objeto con los prametros creados previamente
@@ -31,10 +32,14 @@ AS726X sensorVIS;  // Sensor AS7262 en el canal 2
 
 int contadorMediciones = 0;
 
+Servo servo;
+int pinServo=15;
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);
-
+  
+  servo.attach(pinServo, 500, 2500);
   // Inicializar el multiplexor
   Wire.begin();
   multiplexer.begin();
@@ -57,11 +62,15 @@ void setup() {
   // Limpiar la pantalla
   display.clearDisplay();
   display.display();
+  displayMessage("Bienvenido");
   
   //Serial.println(F("Configuración completa"));
 }
 
+int pos = 0;
+
 void loop() {
+  
   if (Serial.available() > 0) {
       // Lee el ID enviado desde Python
       String id_str = Serial.readString();
@@ -76,13 +85,79 @@ void loop() {
     // Comienza la secuencia de mediciones
     displayMessage("Inicio de Lectura");
     contadorMediciones += 1;
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 10; ++i) {
       Serial.print(contadorMediciones);
       Serial.print(" ");
+      if (i==1){ 
+       //for (pos = 0; pos <= 60; pos += 1) {
+       //Movemos el servo a los grados que le entreguemos
+        servo.write(20);
+        //Esperamos 15 milisegundos
+        delay(50);
+       //}
+      }else if (i==2){
+         //for (pos = 60; pos <= 120 ; pos += 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(40);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==3){
+         //for (pos = 120; pos <= 180; pos += 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(60);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==4){
+         //for (pos = 180; pos >= 90; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(80);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==5){
+         //for (pos = 90; pos >= 0; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(100);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==6){
+         //for (pos = 90; pos >= 0; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(120);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==7){
+         //for (pos = 90; pos >= 0; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(140);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==8){
+         //for (pos = 90; pos >= 0; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(160);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }else if (i==9){
+         //for (pos = 90; pos >= 0; pos -= 1) {
+         //Movemos el servo a los grados que le entreguemos
+          servo.write(180);
+          //Esperamos 15 milisegundos
+          delay(50);
+         //}
+      }
+      
+      
       // Obtener y procesar datos para AS7263 (NIR) en el canal 5
       selectI2CChannel(1);
       delay(10);  // Ajusta según sea necesario
-      sensorNIR.takeMeasurementsWithBulb();
+      sensorNIR.takeMeasurements();
       if (sensorNIR.getVersion() == SENSORTYPE_AS7263) {
         Serial.print(sensorNIR.getCalibratedR(), 2);
         Serial.print(" ");
@@ -100,7 +175,7 @@ void loop() {
       // Obtener y procesar datos para AS7262 (VIS) en el canal 1
       selectI2CChannel(2);
       delay(10);  // Ajusta según sea necesario
-      sensorVIS.takeMeasurementsWithBulb();
+      sensorVIS.takeMeasurements();//WithBulb();
       if (sensorVIS.getVersion() == SENSORTYPE_AS7262) {
         
         Serial.print(sensorVIS.getCalibratedViolet(), 2);
@@ -124,7 +199,14 @@ void loop() {
     displayCounter(contadorMediciones);
     
   }
-  display.display();
+  if(key == '0') {
+    displayMessage("Toma de medidas Terminada");
+    displayMessage("Terminada");
+    }
+  servo.write(0);
+  //Esperamos 15 milisegundos
+  delay(50);
+  display.display();gggggggg5                                                                                                                                                                                           
 }
 
 void selectI2CChannel(uint8_t channel) {
