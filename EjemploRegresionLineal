@@ -1,0 +1,68 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Cargar tus datos espectrales y de referencia
+data = pd.read_csv('datos_espectrales_con_media_Prueba2.csv')
+
+# Separar los datos en características (X) y etiquetas (y)
+X = data[['NIR_R','NIR_S','NIR_T','NIR_U','NIR_V','NIR_W','Vis_Violet','Vis_Blue','Vis_Green','Vis_Yellow','Vis_Orange','Vis_Red']]
+print(X)
+# Valor medio
+media = 37.6
+
+# Solicitar al usuario que ingrese la desviación estándar
+while True:
+    try:
+        desviacion_estandar = float(input("Ingrese la desviación estándar: "))
+        if desviacion_estandar >= 0:
+            break
+        else:
+            print("La desviación estándar debe ser un número positivo.")
+    except ValueError:
+        print("Por favor, ingrese un número válido.")
+
+# Generar valores aleatorios
+num_valores = 20  # Puedes ajustar la cantidad de valores que deseas generar
+valores_aleatorios = np.random.normal(loc=media, scale=desviacion_estandar, size=num_valores)
+
+# Imprimir los valores generados
+print("Valores aleatorios generados:")
+for valor in valores_aleatorios:
+    print(valor)
+
+# Valores de referencia Reales o de laboratorio
+y = valores_aleatorios
+
+# Dividir los datos en conjunto de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+print(X_train)
+print(X_test)
+# Normalizar los datos
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Crear un modelo de regresión lineal
+model = LinearRegression()
+
+# Entrenar el modelo
+model.fit(X_train_scaled, y_train)
+
+# Hacer predicciones en el conjunto de prueba
+y_pred = model.predict(X_test_scaled)
+print(y_pred)
+# Evaluar el rendimiento del modelo
+mse = mean_squared_error(y_test, y_pred)
+print(f'Mean Squared Error: {mse}')
+
+# Visualizar las predicciones vs los valores reales
+plt.scatter(y_test, y_pred)
+plt.xlabel('Valores Reales')
+plt.ylabel('Predicciones')
+plt.title('Predicciones vs Valores Reales')
+plt.show()
