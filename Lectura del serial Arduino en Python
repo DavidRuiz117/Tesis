@@ -14,7 +14,7 @@ try:
         ultimo_id = data['ID'].iloc[-1]
     else:
         ultimo_id = 0
-    nuevo_id = ultimo_id + 1
+    nuevo_id = ultimo_id 
     print('Nuevo ID:', nuevo_id)
 except FileNotFoundError:
     # Si el archivo no existe, asigna el primer ID
@@ -22,6 +22,17 @@ except FileNotFoundError:
     print('Nuevo ID:', nuevo_id)
 # Convierte el ID en un string antes de enviarlo a Arduino
 nuevo_id_str = str(nuevo_id)
+
+# Nombre del archivo CSV de salida 
+archivo_salida = 'datos_espectrales_con_media.csv'
+
+# Calcula la media de los datos para cada ID
+data_media_por_id = data.groupby('ID').mean().reset_index()
+
+# Guarda los datos con la media en otro archivo CSV
+data_media_por_id.to_csv(archivo_salida, index=False)
+
+print(f"Los datos con la media por ID se han guardado en '{archivo_salida}'.")
 
 # Abre el puerto serial
 try:
