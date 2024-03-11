@@ -1,0 +1,22 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Lee el archivo CSV
+data = pd.read_csv('datos_espectrales_con_media.csv')
+
+# Seleccionar solo las columnas NIR
+columnas_nir = ['NIR_R', 'NIR_S', 'NIR_T', 'NIR_U', 'NIR_V', 'NIR_W']
+
+# Graficar cada fila de NIR
+plt.figure(figsize=(10, 6))
+for index, row in data.iterrows():
+    plt.plot(columnas_nir, row[columnas_nir], label=f'Fila {index + 1}')
+
+# Añadir etiquetas y leyenda
+plt.xlabel('Bandas NIR')
+plt.ylabel('Valores')
+plt.legend()
+plt.title('Gráfica de cada fila del archivo CVS (NIR)')
+
+# Mostrar el gráfico
+plt.show()
