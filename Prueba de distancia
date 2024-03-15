@@ -7,6 +7,10 @@ data = pd.read_csv('PruebaDistancia_media.csv')
 # Seleccionar solo las columnas NIR
 columnas_nir = ['NIR_R', 'NIR_S', 'NIR_T', 'NIR_U', 'NIR_V', 'NIR_W']
 
+# Nombres de las bandas de NIR y distancias
+bandas_nir = ['610', '680', '730', '760', '810', '860']
+distancias = ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4']
+
 # Escalar los datos de cada fila al rango de 0 a 1
 max_values = data[columnas_nir].max(axis=1)
 min_values = data[columnas_nir].min(axis=1)
@@ -16,13 +20,13 @@ scaled_data = scaled_data.T
 # Graficar las líneas escaladas
 plt.figure(figsize=(10, 6))
 for index, row in scaled_data.iterrows():
-    plt.plot(row, label=f'Fila {index + 1}')
+    plt.plot(bandas_nir, row[columnas_nir], label=f'Distancia {distancias[index]} cm')
 
 # Ajustar el rango de los ejes
-plt.xlabel('Banda NIR')
-plt.ylabel('Reflectancia escalada')
+plt.xlabel('Longitud de onda (nm)')
+plt.ylabel('Reflectancia Normalizada')
 plt.legend()
-plt.title('Gráfica de cada fila del archivo CVS (NIR) con valores escalados')
+
 
 # Mostrar el gráfico
 plt.show()
