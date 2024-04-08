@@ -1,0 +1,85 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Cargar tus datos espectrales y de referencia
+data = pd.read_csv('datos_espectrales_Prueba2.csv')
+dataMedia = pd.read_csv('datos_espectrales_con_media_Prueba2.csv')
+dataReferencia = pd.read_csv('datosReferencia.csv')
+dataReferencia_Media = pd.read_csv('datosReferencia_media.csv')
+# Separar los datos en características (X) y etiquetas (y)
+X = data[['NIR_R','NIR_S','NIR_T','NIR_U','NIR_V','NIR_W','Vis_Violet','Vis_Blue','Vis_Green','Vis_Yellow','Vis_Orange','Vis_Red']]
+XMedia = dataMedia[['NIR_R','NIR_S','NIR_T','NIR_U','NIR_V','NIR_W','Vis_Violet','Vis_Blue','Vis_Green','Vis_Yellow','Vis_Orange','Vis_Red']]
+
+
+# Valores de referencia Reales o de laboratorio
+y = dataReferencia
+yMedia= dataReferencia_Media
+
+# Dividir los datos en conjunto de entrenamiento y prueba
+X_train = X
+X_test = XMedia
+y_train = y
+y_test = yMedia
+
+# Escalar los datos
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Modelos
+linear_model = LinearRegression()
+pls_model = PLSRegression(n_components=5)
+pca = PCA(n_components=5)
+pca_linear_model = LinearRegression()
+mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=1000, random_state=42)
+
+models = [('Regresión Lineal', linear_model), 
+          ('PLS', pls_model),
+          ('PCA + Regresión Lineal', pca_linear_model),
+          ('Redes Neuronales', mlp_model)]
+
+# Entrenar y predecir con los modelos
+predictions = {}
+mse_scores = {}
+r2_scores = {}
+cv_scores = {}
+
+for name, model in models:
+    if name == 'PCA + Regresión Lineal':
+        X_train_pca = pca.fit_transform(X_train_scaled)
+        model.fit(X_train_pca, y_train)
+        X_test_pca = pca.transform(X_test_scaled)
+        y_pred = model.predict(X_test_pca)
+    else:
+        model.fit(X_train_scaled, y_train)
+        y_pred = model.predict(X_test_scaled)
+    predictions[name] = y_pred
+    mse_scores[name] = mean_squared_error(y_test, y_pred)
+    r2_scores[name] = r2_score(y_test, y_pred)
+    cv_scores[name] = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='neg_mean_squared_error').mean()
+
+# Graficar las predicciones de cada modelo
+plt.figure(figsize=(10, 6))
+for name, y_pred in predictions.items():
+    plt.scatter(y_test, y_pred, label=name, alpha=0.7)
+
+plt.xlabel('Valores reales')
+plt.ylabel('Valores predichos')
+plt.title('Comparación de predicciones de modelos')
+plt.legend()
+plt.show()
+
+# Imprimir resultados
+for name, model in models:
+    print(f"Modelo: {name}")
+    print(f"  - MSE: {mse_scores[name]}")
+    print(f"  - Validación Cruzada MSE: {cv_scores[name]}")
+    print(f"  - Coeficiente de determinación (R2 score): {r2_scores[name]}")
