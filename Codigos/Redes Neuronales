@@ -1,0 +1,88 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# Cargar tus datos espectrales y de referencia
+data = pd.read_csv('datos_espectrales_Prueba2.csv')
+y = pd.read_csv('datosReferencia.csv')
+
+# Preprocesamiento de datos
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(data)
+y_scaled = scaler.fit_transform(y)
+
+# División en conjuntos de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_scaled, test_size=0.2, random_state=42)
+
+""""# Cargar tus datos espectrales y de referencia
+#data = pd.read_csv('datos_espectrales_Prueba2.csv')
+data = pd.read_csv('datos_espectrales_Prueba2.csv')
+yR = pd.read_csv('datosReferencia.csv')
+dataMedia = pd.read_csv('datos_espectrales_con_media_Prueba2.csv')
+y = pd.read_csv('datosReferencia_media.csv')
+# Datos
+XR = data[['NIR_R','NIR_S','NIR_T','NIR_U','NIR_V','NIR_W','Vis_Violet','Vis_Blue','Vis_Green','Vis_Yellow','Vis_Orange','Vis_Red']]
+X = dataMedia[['NIR_R','NIR_S','NIR_T','NIR_U','NIR_V','NIR_W','Vis_Violet','Vis_Blue','Vis_Green','Vis_Yellow','Vis_Orange','Vis_Red']]
+
+
+# Division en conjuntos de entrenamiento y prueba
+gas_train= XR
+#gas_train = X.iloc[:18]
+#gas_test = X.iloc[:10]
+gas_test = X
+# Ajuste del modelo PLSR
+n_components = 3
+X_train = gas_train
+y_train = yR
+
+
+X_test = gas_test
+y_test = y
+"""
+# Definir la arquitectura del modelo
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(1)  # Capa de salida para regresión
+])
+
+# Compilar el modelo
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+# Entrenar el modelo
+history = model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
+
+# Graficar la pérdida durante el entrenamiento
+plt.plot(history.history['loss'], label='train_loss')
+plt.plot(history.history['val_loss'], label = 'val_loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend(loc='upper right')
+plt.title('Pérdida durante el entrenamiento')
+plt.show()
+
+# Evaluar el modelo
+loss = model.evaluate(X_test, y_test)
+print("Error cuadrático medio en datos de prueba:", loss)
+
+
+y_pred = model.predict(X_test)
+#print(y_pred)
+mse = mean_squared_error(y_test, y_pred)
+print("Error cuadrático medio:", mse)
+r2=r2_score(y_test, y_pred)
+print("Coeficiente de Correlación:",r2)
+
+# Predecir los niveles de carbohidratos en el conjunto de prueba
+y_pred = model.predict(X_test)
+
+# Graficar los valores reales vs los valores predichos
+plt.scatter(y_test, y_pred)
+plt.plot([-3, 3], [-3, 3], 'r--', lw=4)  # Línea de referencia
+plt.xlabel('Valores Reales')
+plt.ylabel('Valores Predichos')
+plt.title('Valores Reales vs Valores Predichos')
+plt.show()
