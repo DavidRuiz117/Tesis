@@ -1,0 +1,106 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import GridSearchCV
+
+# Paso 1: Cargar datos desde el archivo CSV
+data = pd.read_csv("datos_espectrales_Prueba2.csv")
+
+# Paso 2: Extraer las características (variables espectrales)
+X = data[['NIR_R', 'NIR_S', 'NIR_T', 'NIR_U', 'NIR_V', 'NIR_W', 'Vis_Violet', 'Vis_Blue', 'Vis_Green', 'Vis_Yellow', 'Vis_Orange', 'Vis_Red']]
+y = pd.read_csv('datosReferencia.csv')
+
+# Dividir datos en conjuntos de entrenamiento y prueba (80% entrenamiento, 20% prueba)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+######################################################################################
+
+# Definir y entrenar modelo de regresión lineal estándar
+lr_model = LinearRegression()
+lr_model.fit(X_train, y_train)
+
+# Evaluar rendimiento del modelo de regresión lineal estándar en conjunto de prueba
+y_pred_lr = lr_model.predict(X_test)
+mse_lr = mean_squared_error(y_test, y_pred_lr)
+r2_lr = r2_score(y_test, y_pred_lr)
+
+print("Rendimiento del modelo de regresión lineal estándar:")
+print("MSE:", mse_lr)
+print("R-cuadrado:", r2_lr)
+print()
+
+######################################################################################
+
+# Definir y entrenar modelo de regresión lineal con PCA
+pca = PCA(n_components=0.95)  # Mantener el 95% de la varianza explicada
+scaler = StandardScaler()
+lr_pca_model = LinearRegression()
+
+# Construir un pipeline para aplicar PCA, escalar características y luego entrenar la regresión lineal
+pca_pipeline = Pipeline([('scaler', scaler), ('pca', pca), ('lr', lr_pca_model)])
+pca_pipeline.fit(X_train, y_train)
+
+# Evaluar rendimiento del modelo de regresión lineal con PCA en conjunto de prueba
+y_pred_pca = pca_pipeline.predict(X_test)
+mse_pca = mean_squared_error(y_test, y_pred_pca)
+r2_pca = r2_score(y_test, y_pred_pca)
+
+print("Rendimiento del modelo de regresión lineal con PCA:")
+print("MSE:", mse_pca)
+print("R-cuadrado:", r2_pca)
+
+######################################################################################
+
+# Definir y entrenar modelo de árbol de decisión
+dt_model = DecisionTreeRegressor(random_state=42)
+dt_model.fit(X_train, y_train)
+
+# Evaluar rendimiento del modelo de árbol de decisión en conjunto de prueba
+y_pred_dt = dt_model.predict(X_test)
+mse_dt = mean_squared_error(y_test, y_pred_dt)
+r2_dt = r2_score(y_test, y_pred_dt)
+
+print("Rendimiento del modelo de Árbol de Decisión:")
+print("MSE:", mse_dt)
+print("R-cuadrado:", r2_dt)
+
+# Calcular los residuos para cada modelo
+residuals_lr = y_test - y_pred_lr
+residuals_pca = y_test - y_pred_pca
+
+# Histogramas de Residuos
+plt.figure(figsize=(12, 6))
+plt.hist(residuals_lr, bins=25, color='blue', alpha=0.5, label='Regresión Lineal Estándar')
+plt.hist(residuals_pca, bins=25, color='green', alpha=0.5, label='Regresión Lineal con PCA')
+plt.title('Histogramas de Residuos')
+plt.xlabel('Residuos')
+plt.ylabel('Frecuencia')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Gráfico de Diferencia de Predicciones
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred_lr - y_pred_pca, color='purple')
+plt.axhline(y=0, color='red', linestyle='--')
+plt.title('Diferencia de Predicciones entre Modelos')
+plt.xlabel('Valores Reales')
+plt.ylabel('Diferencia en Predicciones')
+plt.grid(True)
+plt.show()
+
+# Diagrama de Dispersión de Errores
+plt.figure(figsize=(10, 6))
+plt.scatter(residuals_lr, residuals_pca, color='orange')
+plt.title('Diagrama de Dispersión de Errores')
+plt.xlabel('Residuos (Regresión Lineal Estándar)')
+plt.ylabel('Residuos (Regresión Lineal con PCA)')
+plt.grid(True)
+plt.show()
+
